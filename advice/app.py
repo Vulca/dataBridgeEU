@@ -1,7 +1,9 @@
 import os
 import psycopg2
-from flask import Flask
 import logging
+
+
+from flask import Flask
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "default-secret-key")
@@ -31,6 +33,7 @@ def get_db_connection():
         return None
 
 @app.route("/")
+
 def home():
     logging.info("Requête reçue sur /")
     conn = get_db_connection()
