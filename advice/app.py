@@ -1,19 +1,18 @@
 import os
 from flask import Flask
+from dotenv import load_dotenv
+load_dotenv()
+
 import psycopg2
 
-app = Flask(__name__)
-
-# Configuration de la base de données via les variables d'environnement
 DATABASE_CONFIG = {
     "dbname": os.environ.get("DB_NAME"),
     "user": os.environ.get("DB_USER"),
     "password": os.environ.get("DB_PASSWORD"),
     "host": os.environ.get("DB_HOST"),
-    "port": os.environ.get("DB_PORT"),
+    "port": os.environ.get("DB_PORT", 5432),  # 5432 par défaut
 }
 
-# Connexion à PostgreSQL
 def get_db_connection():
     conn = psycopg2.connect(
         dbname=DATABASE_CONFIG["dbname"],

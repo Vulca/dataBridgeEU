@@ -1,1 +1,1 @@
-web: python advice/app.py
+web: gunicorn advice.app:app
