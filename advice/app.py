@@ -1,12 +1,11 @@
-import os
-import psycopg2
-import logging
-
-
 from flask import Flask
+from dotenv import load_dotenv
+import os
+
+load_dotenv()  # Charge les variables du fichier .env
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "default-secret-key")
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')  # Charge la clé secrète
 
 logging.basicConfig(level=logging.INFO)
 
