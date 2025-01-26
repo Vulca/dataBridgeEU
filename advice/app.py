@@ -1,26 +1,39 @@
 import os
-import psycopg2
 from flask import Flask
+import psycopg2
 
 app = Flask(__name__)
 
+# Configuration de la base de données via les variables d'environnement
+DATABASE_CONFIG = {
+    "dbname": os.environ.get("DB_NAME"),
+    "user": os.environ.get("DB_USER"),
+    "password": os.environ.get("DB_PASSWORD"),
+    "host": os.environ.get("DB_HOST"),
+    "port": os.environ.get("DB_PORT"),
+}
+
+# Connexion à PostgreSQL
 def get_db_connection():
-    try:
-        conn = psycopg2.connect(os.getenv("DATABASE_URL"))
-        return conn
-    except Exception as e:
-        print("Erreur lors de la connexion à la base de données :", e)
-        raise
+    conn = psycopg2.connect(
+        dbname=DATABASE_CONFIG["dbname"],
+        user=DATABASE_CONFIG["user"],
+        password=DATABASE_CONFIG["password"],
+        host=DATABASE_CONFIG["host"],
+        port=DATABASE_CONFIG["port"],
+    )
+    return conn
 
 @app.route("/")
 def home():
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT 1;")  # Exemple de requête
-        return "Connexion réussie à la base de données !"
-    except Exception as e:
-        return f"Erreur : {str(e)}"
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT 'Bienvenue !'")  # Exemple simple
+    result = cur.fetchone()
+    conn.close()
+    return result[0]
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Récupérer le port de l'environnement ou utiliser 5000 par défaut
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
