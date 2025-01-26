@@ -1,9 +1,12 @@
 import os
-from flask import Flask
-from dotenv import load_dotenv
-load_dotenv()
-
 import psycopg2
+from flask import Flask
+import logging
+
+app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "default-secret-key")
+
+logging.basicConfig(level=logging.INFO)
 
 DATABASE_CONFIG = {
     "dbname": os.environ.get("DB_NAME"),
@@ -14,22 +17,31 @@ DATABASE_CONFIG = {
 }
 
 def get_db_connection():
-    conn = psycopg2.connect(
-        dbname=DATABASE_CONFIG["dbname"],
-        user=DATABASE_CONFIG["user"],
-        password=DATABASE_CONFIG["password"],
-        host=DATABASE_CONFIG["host"],
-        port=DATABASE_CONFIG["port"],
-    )
-    return conn
+    try:
+        conn = psycopg2.connect(
+            dbname=DATABASE_CONFIG["dbname"],
+            user=DATABASE_CONFIG["user"],
+            password=DATABASE_CONFIG["password"],
+            host=DATABASE_CONFIG["host"],
+            port=DATABASE_CONFIG["port"],
+        )
+        return conn
+    except psycopg2.OperationalError as e:
+        logging.error(f"Erreur de connexion à la base de données : {e}")
+        return None
 
 @app.route("/")
 def home():
+    logging.info("Requête reçue sur /")
     conn = get_db_connection()
+    if conn is None:
+        logging.error("Erreur de connexion à la base de données")
+        return "Impossible de se connecter à la base de données", 500
     cur = conn.cursor()
-    cur.execute("SELECT 'Bienvenue !'")  # Exemple simple
+    cur.execute("SELECT 'Bienvenue !'")
     result = cur.fetchone()
     conn.close()
+    logging.info("Requête réussie")
     return result[0]
 
 if __name__ == "__main__":
