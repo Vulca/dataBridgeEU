@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supabase API Interaction</title>
+</head>
+<body>
+  <h1>Interaction avec l'API Supabase</h1>
+
+  <!-- Formulaire pour ajouter des données -->
+  <section>
+    <h2>Ajouter des données</h2>
+    <form id="add-form">
+      <label for="table-add">Nom de la table:</label>
+      <input type="text" id="table-add" required>
+      <br>
+      <label for="data-add">Données (JSON):</label>
+      <textarea id="data-add" required></textarea>
+      <br>
+      <button type="submit">Ajouter</button>
+    </form>
+    <p id="add-result"></p>
+  </section>
+
+  <!-- Formulaire pour modifier des données -->
+  <section>
+    <h2>Modifier des données</h2>
+    <form id="update-form">
+      <label for="table-update">Nom de la table:</label>
+      <input type="text" id="table-update" required>
+      <br>
+      <label for="id-field-update">Nom du champ identifiant:</label>
+      <input type="text" id="id-field-update" required>
+      <br>
+      <label for="id-value-update">Valeur de l'identifiant:</label>
+      <input type="text" id="id-value-update" required>
+      <br>
+      <label for="data-update">Données (JSON):</label>
+      <textarea id="data-update" required></textarea>
+      <br>
+      <button type="submit">Mettre à jour</button>
+    </form>
+    <p id="update-result"></p>
+  </section>
+
+  <!-- Formulaire pour afficher des données -->
+  <section>
+    <h2>Afficher des données</h2>
+    <form id="get-form">
+      <label for="table-get">Nom de la table:</label>
+      <input type="text" id="table-get" required>
+      <br>
+      <label for="filters-get">Filtres (key=value):</label>
+      <input type="text" id="filters-get">
+      <br>
+      <button type="submit">Afficher</button>
+    </form>
+    <pre id="get-result"></pre>
+  </section>
+
+  <script>
+    const API_URL = 'http://127.0.0.1:8000'; // Remplace par ton URL d'API
+
+    // Ajouter des données
+    document.getElementById('add-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const table = document.getElementById('table-add').value;
+      const data = JSON.parse(document.getElementById('data-add').value);
+      try {
+        const response = await fetch(`${API_URL}/add/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ table, data }),
+        });
+        const result = await response.json();
+        document.getElementById('add-result').textContent = JSON.stringify(result);
+      } catch (err) {
+        document.getElementById('add-result').textContent = `Erreur: ${err}`;
+      }
+    });
+
+    // Modifier des données
+    document.getElementById('update-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const table = document.getElementById('table-update').value;
+      const idField = document.getElementById('id-field-update').value;
+      const idValue = document.getElementById('id-value-update').value;
+      const data = JSON.parse(document.getElementById('data-update').value);
+      try {
+        const response = await fetch(`${API_URL}/update/`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ table, id_field: idField, id_value: idValue, data }),
+        });
+        const result = await response.json();
+        document.getElementById('update-result').textContent = JSON.stringify(result);
+      } catch (err) {
+        document.getElementById('update-result').textContent = `Erreur: ${err}`;
+      }
+    });
+
+    // Afficher des données
+    document.getElementById('get-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const table = document.getElementById('table-get').value;
+      const filters = document.getElementById('filters-get').value;
+      try {
+        const response = await fetch(`${API_URL}/get/${table}${filters ? `?filters=${filters}` : ''}`);
+        const result = await response.json();
+        document.getElementById('get-result').textContent = JSON.stringify(result, null, 2);
+      } catch (err) {
+        document.getElementById('get-result').textContent = `Erreur: ${err}`;
+      }
+    });
+  </script>
+</body>
+</html>

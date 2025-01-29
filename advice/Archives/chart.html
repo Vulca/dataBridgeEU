@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funds Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Funds Chart</h1>
+    <canvas id="fundsChart" width="800" height="400"></canvas>
+
+    <script>
+        // Passer les données de Flask à JavaScript
+        const dataFromFlask = {{ data|tojson }};
+
+        // Transformer les données pour le graphique
+        const labels = [...new Set(dataFromFlask.map(item => item.year))]; // Années
+        const datasets = {};
+
+        dataFromFlask.forEach(item => {
+            if (!datasets[item.fund]) {
+                datasets[item.fund] = {
+                    label: item.fund,
+                    data: [],
+                    borderColor: '#' + Math.floor(Math.random()*16777215).toString(16), // Couleur aléatoire
+                    borderWidth: 1,
+                    fill: false
+                };
+            }
+            datasets[item.fund].data[labels.indexOf(item.year)] = item.total_grant;
+        });
+
+        const chartData = {
+            labels: labels,
+            datasets: Object.values(datasets)
+        };
+
+        // Configurer le graphique
+        const config = {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Year'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Total Grant'
+                        }
+                    }
+                }
+            }
+        };
+
+        // Rendre le graphique
+        const ctx = document.getElementById('fundsChart').getContext('2d');
+        new Chart(ctx, config);
+    </script>
+</body>
+</html>

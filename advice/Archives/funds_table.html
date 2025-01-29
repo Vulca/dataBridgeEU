@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funds Table</title>
+    <style>
+        table {
+            width: 80%;
+            margin: auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Funds by Origin</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Origin Fund</th>
+                <th>Total Grant (in €)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for origin, total in data %}
+            <tr>
+                <td>{{ origin }}</td>
+                <td>{{ total | round(2) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

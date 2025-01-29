@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des Bases de Données</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid black;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 20px;
+      background-color: white;
+      border: 1px solid black;
+      z-index: 1000;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gestion des Bases de Données</h1>
+
+  <!-- Sélection de la table -->
+  <label for="table-select">Choisir une table :</label>
+  <select id="table-select"></select>
+  <button onclick="loadTable()">Charger la table</button>
+
+  <!-- Section pour ajouter une ligne -->
+  <button onclick="openModal('add')">Ajouter une ligne</button>
+
+  <!-- Tableau des données -->
+  <table>
+    <thead id="table-headers"></thead>
+    <tbody id="table-body"></tbody>
+  </table>
+
+  <!-- Modale pour ajout/modification -->
+  <div class="modal-overlay" id="modal-overlay"></div>
+  <div class="modal" id="edit-modal">
+    <h3 id="modal-title"></h3>
+    <form id="edit-form">
+      <div id="form-fields"></div>
+      <button type="submit">Enregistrer</button>
+      <button type="button" onclick="closeModal()">Annuler</button>
+    </form>
+  </div>
+
+  <script>
+    const API_URL = 'http://127.0.0.1:8000'; // Changez par l'URL de votre backend
+
+    // Charger la liste des tables
+    async function loadTables() {
+      const response = await fetch(`${API_URL}/tables/`);
+      const { tables } = await response.json();
+      const select = document.getElementById('table-select');
+      select.innerHTML = tables.map(table => `<option value="${table}">${table}</option>`).join('');
+    }
+
+    // Charger les données d'une table
+    async function loadTable() {
+      const tableName = document.getElementById('table-select').value;
+      const response = await fetch(`${API_URL}/get/${tableName}`);
+      const { data } = await response.json();
+
+      // Générer les headers dynamiques
+      const headers = Object.keys(data[0] || {});
+      document.getElementById('table-headers').innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}<th>Actions</th></tr>`;
+
+      // Générer les lignes dynamiques
+      document.getElementById('table-body').innerHTML = data.map(row => `
+        <tr>
+          ${headers.map(h => `<td>${row[h]}</td>`).join('')}
+          <td>
+            <button onclick='editRow("${tableName}", ${JSON.stringify(row)})'>Modifier</button>
+            <button onclick='deleteRow("${tableName}", ${row.id})'>Supprimer</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Ouvrir la modale pour ajouter ou modifier une ligne
+    function openModal(mode, rowData = {}) {
+      const modal = document.getElementById('edit-modal');
+      const overlay = document.getElementById('modal-overlay');
+      const formFields = document.getElementById('form-fields');
+      const tableName = document.getElementById('table-select').value;
+
+      formFields.innerHTML = Object.entries(rowData).map(([key, value]) => `
+        <label>${key}:</label>
+        <input type="text" name="${key}" value="${value || ''}">
+        <br>
+      `).join('');
+
+      document.getElementById('modal-title').innerText = mode === 'add' ? 'Ajouter une ligne' : 'Modifier une ligne';
+      const form = document.getElementById('edit-form');
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        if (mode === 'add') {
+          await fetch(`${API_URL}/add/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ table: tableName, data })
+          });
+        } else {
+          await fetch(`${API_URL}/update/`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ table: tableName, id_field: 'id', id_value: rowData.id, data })
+          });
+        }
+        closeModal();
+        loadTable(
